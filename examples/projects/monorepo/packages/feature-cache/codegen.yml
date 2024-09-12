@@ -1,0 +1,6 @@
+schema: ["../../apps/graphql-server/schema.graphql"]
+documents: []
+overwrite: true
+generates:
+  'baseTypes.ts':
+    plugins: [typescript]
