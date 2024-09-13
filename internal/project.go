@@ -20,10 +20,19 @@ type Project struct {
 	config Config
 }
 
-func FindProjects(rootDir string, walkDir func(string, fs.WalkDirFunc) error) []Project {
+func FindProjects(rootDir string, walkDir func(string, fs.WalkDirFunc) error) ([]Project, error) {
+	// check if path exists
+	if _, err := os.Stat(rootDir); err != nil {
+	    return nil, err
+	}
+
 	var projects []Project
 
 	err := walkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if d.IsDir() && d.Name() == "node_modules" {
+			return fs.SkipDir
+		}
+
 		if strings.HasSuffix(path, "codegen.ts") || strings.HasSuffix(path, "codegen.yml") {
 			project := Project{
 				RootDir: filepath.Dir(path),
@@ -40,10 +49,10 @@ func FindProjects(rootDir string, walkDir func(string, fs.WalkDirFunc) error) []
 		return nil
 	})
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
-	return projects
+	return projects, nil
 }
 
 /*
@@ -82,7 +91,7 @@ func (e *ExecutionContext) GetSchema(key string) *ast.Schema {
 /*
 LoadSchemas will find every project with a unique list of schemas and load those to cache.
 */
-func (e *ExecutionContext) LoadSchemas() {
+func (e *ExecutionContext) LoadSchemas() int {
 	// find unique schemas
 	var uniqueSchemas []string
 	var projectsToLoad []Project
@@ -118,6 +127,8 @@ func (e *ExecutionContext) LoadSchemas() {
 	}
 
 	wg.Wait()
+
+	return len(uniqueSchemas)
 }
 
 func (e *ExecutionContext) Execute() {
