@@ -1,5 +1,8 @@
+[![Build and Release](https://github.com/simse/faster-graphql-codegen/actions/workflows/release.yml/badge.svg)](https://github.com/simse/faster-graphql-codegen/actions/workflows/release.yml)
 # 🚀 faster-graphql-codegen 🚀
 A reimplementation of graphql-codegen designed to be (much) faster than the original. It aims to be drop-in compatible where possible.
+
+[Docs](https://faster-graphql-codegen.simse.io/) | [Quick Start](https://faster-graphql-codegen.simse.io/quick-start)
 
 ## Current functionality
 - [x] Parse single graphql schema from file
@@ -10,14 +13,14 @@ A reimplementation of graphql-codegen designed to be (much) faster than the orig
   - [x] Comments
   - [x] InputObjects
   - [x] Objects
-  - [ ] Implements
-  - [ ] Custom Scalars
+  - [x] Implements
+  - [x] Custom Scalars
   - [ ] Lots of other things
-- [ ] Load .yaml config
+- [x] Load .yaml config
 - [ ] Load .js/.ts config
 - [ ] Extract and generate types for queries
 - [ ] Extract and generate types for mutations
-- [ ] Monorepo support
+- [x] Monorepo support
 
 ## Yo!
 This is still just an experiment.
