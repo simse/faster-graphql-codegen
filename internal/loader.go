@@ -3,7 +3,6 @@ package internal
 import (
     "github.com/vektah/gqlparser/v2"
     "github.com/vektah/gqlparser/v2/ast"
-    "time"
 )
 import (
     "errors"

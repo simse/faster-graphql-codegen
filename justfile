@@ -31,4 +31,5 @@ build:
         done
     done
 
-lint: staticcheck ./...
+lint:
+    staticcheck ./...
