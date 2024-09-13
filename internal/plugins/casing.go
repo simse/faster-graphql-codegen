@@ -1,4 +1,4 @@
-package internal
+package plugins
 
 import (
     "github.com/iancoleman/strcase"

@@ -4,3 +4,5 @@ overwrite: true
 generates:
   '__generated__/baseTypes.ts':
     plugins: [typescript]
+  'introspection.json':
+    plugins: [introspection]
