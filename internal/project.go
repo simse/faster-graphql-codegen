@@ -1,8 +1,10 @@
 package internal
 
 import (
+    "github.com/simse/faster-graphql-codegen/internal/plugins"
     "github.com/vektah/gqlparser/v2/ast"
     "io/fs"
+    "log/slog"
     "os"
     "path"
     "path/filepath"
@@ -30,7 +32,7 @@ func FindProjects(rootDir string, walkDir func(string, fs.WalkDirFunc) error) []
 
 			// prime project
 			config := project.GetConfig()
-			project.Schemas = config.Schema
+			project.Schemas = config.Schemas
 
 			projects = append(projects, project)
 		}
@@ -50,7 +52,7 @@ SchemaKey generates a string get is unique to a combination of schema documents
 func (p *Project) SchemaKey() string {
 	projectConfig := p.GetConfig()
 
-	sortedSchemas := slices.Clone(projectConfig.Schema)
+	sortedSchemas := slices.Clone(projectConfig.Schemas)
 	slices.Sort(sortedSchemas)
 
 	return strings.Join(sortedSchemas, ",")
@@ -127,32 +129,37 @@ func (e *ExecutionContext) Execute() {
 
 		// execute all generation tasks
 		config := project.GetConfig()
-		for destination, _ := range config.Generates {
+		for destination, destinationConfig := range config.Generates {
 			wg.Add(1)
 
 			go func() {
 				defer wg.Done()
 
+				// ensure output dir exists
 				destinationFile := path.Join(project.RootDir, destination)
-
 				dirCreationErr := EnsureDir(destinationFile)
 				if dirCreationErr != nil {
 					panic(dirCreationErr)
 				}
 
+				// create output string in memory
 				output := strings.Builder{}
-				ConvertSchema(schema, &output)
 
+				e.ExecuteDestinationTasks(destinationConfig, &output, schema, project)
+
+				// create output file
 				outputFile, openErr := os.Create(destinationFile)
 			    if openErr != nil {
 			        panic(openErr)
 			    }
 
+				// write output file
 				_, writeErr := outputFile.WriteString(output.String())
 				if writeErr != nil {
 					panic(writeErr)
 				}
 
+				// close output files
 		        err := outputFile.Close()
 		        if err != nil {
 		            panic(err)
@@ -162,6 +169,36 @@ func (e *ExecutionContext) Execute() {
 	}
 
 	wg.Wait()
+}
+
+func (e *ExecutionContext) ExecuteDestinationTasks(
+	destinationConfig Generates,
+	output *strings.Builder,
+	schema *ast.Schema,
+	project Project,
+) {
+	task := plugins.PluginTask{
+		Schema: schema,
+		Output: output,
+		Config: project.GetConfig(),
+	}
+
+	// execute plugins
+	for _, plugin := range destinationConfig.Plugins {
+		if pluginErr := plugins.VerifyPlugin(plugin, destinationConfig); pluginErr != nil {
+			slog.Error("unknown plugin", "plugin", plugin)
+		}
+
+		// slog.Info(plugin)
+
+		if plugin == "typescript" {
+			task.Typescript()
+		}
+
+		if plugin == "introspection" {
+            task.Introspect()
+		}
+	}
 }
 
 func EnsureDir(filePath string) error {

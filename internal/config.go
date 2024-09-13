@@ -8,17 +8,18 @@ import (
 )
 
 type Config struct {
-	Schema []string `yaml:"schema"`
+	Schemas   []string `yaml:"schema"`
 	Documents []string `yaml:"documents"`
 	Overwrite bool `yaml:"overwrite"`
-	Generates map[string]struct{
-		Plugins []string `yaml:"plugins"`
-		Preset string `yaml:"preset"`
-	} `yaml:"generates"`
+	Generates map[string]Generates `yaml:"generates"`
 }
 
+type Generates struct{
+	Plugins []string `yaml:"plugins"`
+	Preset string `yaml:"preset"`
+}
 func (p *Project) GetConfig() Config {
-	if !reflect.ValueOf(p.config.Schema).IsZero() {
+	if !reflect.ValueOf(p.config.Schemas).IsZero() {
 		return p.config
 	}
 
