@@ -30,3 +30,5 @@ build:
                 go build -ldflags="-s -w" -o "build/$output" .
         done
     done
+
+lint: staticcheck ./...
