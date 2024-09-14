@@ -33,3 +33,6 @@ build:
 
 lint:
     staticcheck ./...
+
+docs-dev:
+    pnpm -C docs docs:dev

@@ -1,29 +1,29 @@
 package internal
 
 import (
-    "github.com/simse/faster-graphql-codegen/internal/plugins"
-    "github.com/vektah/gqlparser/v2/ast"
-    "io/fs"
-    "log/slog"
-    "os"
-    "path"
-    "path/filepath"
-    "slices"
-    "strings"
-    "sync"
+	"github.com/simse/faster-graphql-codegen/internal/plugins"
+	"github.com/vektah/gqlparser/v2/ast"
+	"io/fs"
+	"log/slog"
+	"os"
+	"path"
+	"path/filepath"
+	"slices"
+	"strings"
+	"sync"
 )
 
 type Project struct {
-	RootDir string
+	RootDir    string
 	ConfigFile string
-	Schemas []string
-	config Config
+	Schemas    []string
+	config     Config
 }
 
 func FindProjects(rootDir string, walkDir func(string, fs.WalkDirFunc) error) ([]Project, error) {
 	// check if path exists
 	if _, err := os.Stat(rootDir); err != nil {
-	    return nil, err
+		return nil, err
 	}
 
 	var projects []Project
@@ -35,7 +35,7 @@ func FindProjects(rootDir string, walkDir func(string, fs.WalkDirFunc) error) ([
 
 		if strings.HasSuffix(path, "codegen.ts") || strings.HasSuffix(path, "codegen.yml") {
 			project := Project{
-				RootDir: filepath.Dir(path),
+				RootDir:    filepath.Dir(path),
 				ConfigFile: d.Name(),
 			}
 
@@ -68,7 +68,7 @@ func (p *Project) SchemaKey() string {
 }
 
 type ExecutionContext struct {
-	Projects []Project
+	Projects      []Project
 	LoadedSchemas map[string]*ast.Schema
 }
 
@@ -160,9 +160,9 @@ func (e *ExecutionContext) Execute() {
 
 				// create output file
 				outputFile, openErr := os.Create(destinationFile)
-			    if openErr != nil {
-			        panic(openErr)
-			    }
+				if openErr != nil {
+					panic(openErr)
+				}
 
 				// write output file
 				_, writeErr := outputFile.WriteString(output.String())
@@ -171,10 +171,10 @@ func (e *ExecutionContext) Execute() {
 				}
 
 				// close output files
-		        err := outputFile.Close()
-		        if err != nil {
-		            panic(err)
-		        }
+				err := outputFile.Close()
+				if err != nil {
+					panic(err)
+				}
 			}()
 		}
 	}
@@ -207,7 +207,7 @@ func (e *ExecutionContext) ExecuteDestinationTasks(
 		}
 
 		if plugin == "introspection" {
-            task.Introspect()
+			task.Introspect()
 		}
 	}
 }

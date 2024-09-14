@@ -1,6 +1,10 @@
-[![Build and Release](https://github.com/simse/faster-graphql-codegen/actions/workflows/release.yml/badge.svg)](https://github.com/simse/faster-graphql-codegen/actions/workflows/release.yml)
 # 🚀 faster-graphql-codegen 🚀
 A reimplementation of graphql-codegen designed to be (much) faster than the original. It aims to be drop-in compatible where possible.
+
+![GitHub Release](https://img.shields.io/github/v/release/simse/faster-graphql-codegen)
+[![Build and Release](https://github.com/simse/faster-graphql-codegen/actions/workflows/release.yml/badge.svg)](https://github.com/simse/faster-graphql-codegen/actions/workflows/release.yml)
+[![Go Report Card](https://goreportcard.com/badge/github.com/simse/faster-graphql-codegen)](https://goreportcard.com/report/github.com/simse/faster-graphql-codegen)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 [Docs](https://faster-graphql-codegen.simse.io/) | [Quick Start](https://faster-graphql-codegen.simse.io/quick-start)
 

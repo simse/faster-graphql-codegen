@@ -1,8 +1,8 @@
 package plugins
 
 import (
-    "github.com/iancoleman/strcase"
-    "strings"
+	"github.com/iancoleman/strcase"
+	"strings"
 )
 
 func ToUpper(input string) string {

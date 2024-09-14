@@ -1,11 +1,11 @@
 package internal
 
 import (
-    "github.com/vektah/gqlparser/v2"
-    "github.com/vektah/gqlparser/v2/ast"
+	"github.com/vektah/gqlparser/v2"
+	"github.com/vektah/gqlparser/v2/ast"
 )
 import (
-    "errors"
+	"errors"
 	"os"
 )
 
@@ -24,8 +24,8 @@ func LoadSchema(inputs ...string) (*ast.Schema, error) {
 
 	schema, schemaParseError := gqlparser.LoadSchema(&ast.Source{
 		BuiltIn: false,
-		Input: string(dat),
-		Name: "test.graphql",
+		Input:   string(dat),
+		Name:    "test.graphql",
 	})
 	if schemaParseError != nil {
 		return &ast.Schema{}, schemaParseError

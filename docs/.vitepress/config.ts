@@ -11,7 +11,7 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Examples', link: '/markdown-examples' }
+      { text: 'Reference', link: '/reference' }
     ],
 
     sidebar: [
@@ -19,12 +19,36 @@ export default defineConfig({
         text: 'Get Started',
         items: [
           { text: 'Quick Start', link: '/quick-start' },
+          { text: 'Installation', link: '/install' },
         ]
+      },
+      {
+        text: 'Configuration',
+        items: [
+          { text: 'Config File', link: '/config' },
+        ]
+      },
+      {
+        text: 'Plugins',
+        items: [
+          { text: 'Overview', link: '/plugins' },
+        ]
+      },
+      {
+        text: 'Reference',
+        items: [
+          { text: 'codegen.ts', link: '/reference/config' },
+        ],
+        collapsed: true,
       }
     ],
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/simse/faster-graphql-codegen' }
-    ]
+    ],
+
+    search: {
+      provider: 'local'
+    }
   }
 })
