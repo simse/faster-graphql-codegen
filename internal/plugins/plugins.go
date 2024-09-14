@@ -1,9 +1,9 @@
 package plugins
 
 import (
-    "errors"
-    "github.com/vektah/gqlparser/v2/ast"
-    "strings"
+	"errors"
+	"github.com/vektah/gqlparser/v2/ast"
+	"strings"
 )
 
 type PluginTask struct {

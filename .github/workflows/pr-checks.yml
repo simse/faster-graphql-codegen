@@ -58,3 +58,19 @@ jobs:
 
        - name: Unit tests
          run: go test ./...
+
+  format-check:
+     runs-on: ubuntu-latest
+     continue-on-error: true
+     steps:
+       - name: Checkout repository
+         uses: actions/checkout@v4
+
+       - name: "Set up Go"
+         uses: actions/setup-go@v5
+         with:
+            go-version: '1.23.1'
+
+       - name: Check formatting
+         id: check_formatting
+         run: test -z $(gofmt -l .)

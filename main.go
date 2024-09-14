@@ -1,13 +1,13 @@
 package main
 
 import (
-    "errors"
-    "fmt"
-    "github.com/briandowns/spinner"
-    "github.com/simse/faster-graphql-codegen/internal"
-    "os"
-    "path/filepath"
-    "time"
+	"errors"
+	"fmt"
+	"github.com/briandowns/spinner"
+	"github.com/simse/faster-graphql-codegen/internal"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 func main() {
