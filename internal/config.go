@@ -2,12 +2,13 @@ package internal
 
 import (
 	"errors"
+	"fmt"
 	"github.com/dop251/goja"
 	"github.com/evanw/esbuild/pkg/api"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path"
-	"reflect"
+    "reflect"
 	"strings"
 )
 
@@ -67,14 +68,12 @@ func ParseJSConfig(configString string, filePath string) Config {
 		panic(bundleErr)
 	}
 
-	_, executeErr := executeJSConfigFile(bundledConfig)
+	config, executeErr := executeJSConfigFile(bundledConfig)
 	if executeErr != nil {
 		panic(executeErr)
 	}
 
-	os.Exit(0)
-
-	return Config{}
+	return config
 }
 
 /*
@@ -95,7 +94,7 @@ func bundleJSConfigFile(filePath string) (string, error) {
 		Write:       false,
 		LogLevel:    api.LogLevelInfo,
 		Format:      api.FormatCommonJS,
-		Target: 	 api.ES2015,
+		Target:      api.ES2015,
 	})
 
 	if len(result.Errors) > 0 {
@@ -108,38 +107,127 @@ func bundleJSConfigFile(filePath string) (string, error) {
 func executeJSConfigFile(input string) (Config, error) {
 	vm := goja.New()
 
-	// Step 1: Initialize module.exports
+	// Initialize module.exports
 	module := vm.NewObject()
 	module.Set("exports", vm.NewObject())
 	vm.Set("module", module)
 
+	// Run the JavaScript code
 	_, err := vm.RunString(input)
 	if err != nil {
-		panic(err)
+		return Config{}, err
 	}
 
-	// Step 3: Access module.exports.default
+	// Access module.exports.default
 	exports := module.Get("exports").ToObject(vm)
 	defaultExport := exports.Get("default")
 
-	// Step 4: Convert the JavaScript value to a Go value
+	// Convert the JavaScript value to a Go value
 	var exportResult map[string]interface{}
 	err = vm.ExportTo(defaultExport, &exportResult)
 	if err != nil {
-		panic(err)
+		return Config{}, err
 	}
 
-	config := Config{}
+	config := Config{
+		Generates: make(map[string]Generates),
+	}
 
-	// get schema
-	switch v := reflect.ValueOf(exportResult["schema"]); v.Kind() {
-	case reflect.String:
-		config.Schemas = []string{exportResult["schema"].(string)}
-	case reflect.Array:
-		config.Schemas = exportResult["schema"].([]string)
-	default:
-		panic("schema unknown type")
+	// Get 'schema' field
+	if schemaValue, ok := exportResult["schema"]; ok {
+		schemas, err := getStringOrStringSlice(schemaValue)
+		if err != nil {
+			return Config{}, fmt.Errorf("error parsing 'schema': %v", err)
+		}
+		config.Schemas = schemas
+	} else {
+		return Config{}, fmt.Errorf("'schema' field is required")
+	}
+
+	// Get 'overwrite' field
+	if overwriteValue, ok := exportResult["overwrite"]; ok {
+		overwrite, err := getBool(overwriteValue)
+		if err != nil {
+			return Config{}, fmt.Errorf("error parsing 'overwrite': %v", err)
+		}
+		config.Overwrite = overwrite
+	}
+
+	// Get 'generates' field
+	if generatesValue, ok := exportResult["generates"]; ok {
+		generatesMap, err := getMapStringInterface(generatesValue)
+		if err != nil {
+			return Config{}, fmt.Errorf("error parsing 'generates': %v", err)
+		}
+
+		for destination, destConfigValue := range generatesMap {
+			destConfigMap, err := getMapStringInterface(destConfigValue)
+			if err != nil {
+				return Config{}, fmt.Errorf("error parsing 'generates[%s]': %v", destination, err)
+			}
+
+			generate := Generates{}
+
+			if pluginsValue, ok := destConfigMap["plugins"]; ok {
+				pluginsSlice, err := getStringSlice(pluginsValue)
+				if err != nil {
+					return Config{}, fmt.Errorf("error parsing 'plugins' in 'generates[%s]': %v", destination, err)
+				}
+				generate.Plugins = pluginsSlice
+			}
+
+			config.Generates[destination] = generate
+		}
 	}
 
 	return config, nil
+}
+
+// Helper function to get a string or slice of strings
+func getStringOrStringSlice(value interface{}) ([]string, error) {
+	switch v := value.(type) {
+	case string:
+		return []string{v}, nil
+	case []interface{}:
+		return convertInterfaceSliceToStringSlice(v)
+	default:
+		return nil, fmt.Errorf("value is not a string or []string")
+	}
+}
+
+// Helper function to get a boolean value
+func getBool(value interface{}) (bool, error) {
+	if b, ok := value.(bool); ok {
+		return b, nil
+	}
+	return false, fmt.Errorf("value is not a boolean")
+}
+
+// Helper function to get map[string]interface{}
+func getMapStringInterface(value interface{}) (map[string]interface{}, error) {
+	if m, ok := value.(map[string]interface{}); ok {
+		return m, nil
+	}
+	return nil, fmt.Errorf("value is not an object")
+}
+
+// Helper function to convert interface{} to []string
+func getStringSlice(value interface{}) ([]string, error) {
+	if slice, ok := value.([]interface{}); ok {
+		return convertInterfaceSliceToStringSlice(slice)
+	}
+	return nil, fmt.Errorf("value is not an array")
+}
+
+// Helper function to convert []interface{} to []string
+func convertInterfaceSliceToStringSlice(slice []interface{}) ([]string, error) {
+	result := make([]string, len(slice))
+	for i, elem := range slice {
+		if str, ok := elem.(string); ok {
+			result[i] = str
+		} else {
+			return nil, fmt.Errorf("element at index %d is not a string", i)
+		}
+	}
+	return result, nil
 }

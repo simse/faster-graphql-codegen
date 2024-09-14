@@ -34,8 +34,9 @@ func FindProjects(rootDir string, walkDir func(string, fs.WalkDirFunc) error) ([
 		}
 
 		if strings.HasSuffix(path, "codegen.ts") || strings.HasSuffix(path, "codegen.yml") {
+			absolutePath, _ := filepath.Abs(filepath.Dir(path))
 			project := Project{
-				RootDir:    filepath.Dir(path),
+				RootDir:    absolutePath,
 				ConfigFile: d.Name(),
 			}
 

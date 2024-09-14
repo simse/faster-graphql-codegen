@@ -34,5 +34,11 @@ build:
 lint:
     staticcheck ./...
 
+test:
+    go test ./...
+
+format:
+    go fmt ./...
+
 docs-dev:
     pnpm -C docs docs:dev

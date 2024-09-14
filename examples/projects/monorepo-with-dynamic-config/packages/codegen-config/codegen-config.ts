@@ -1,11 +1,12 @@
 import type { CodegenConfig } from '@graphql-codegen/cli'
 
 const createConfig = (): CodegenConfig => ({
-schema: '../../apps/graphql-server/schema.graphql',
+schema: ['../../apps/graphql-server/schema.graphql'],
 documents: null,
 generates: {
-  '__generated__/bruh.ts': {
-    plugins: ['typescript']
+  '__generated__/baseTypes.ts': {
+    plugins: ['typescript'],
+    preset: 'client',
   }
 }
 })
