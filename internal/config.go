@@ -24,15 +24,15 @@ type Generates struct {
 	Preset  string   `yaml:"preset"`
 }
 
-func (p *Project) GetConfig() Config {
+func (p *Project) GetConfig() (Config, error) {
 	if !reflect.ValueOf(p.config.Schemas).IsZero() {
-		return p.config
+		return p.config, nil
 	}
 
 	configFilePath := path.Join(p.RootDir, p.ConfigFile)
 	dat, err := os.ReadFile(configFilePath)
 	if err != nil {
-		panic(err)
+		return Config{}, errors.New("could not read config file: " + err.Error())
 	}
 
 	if strings.HasSuffix(p.ConfigFile, ".ts") || strings.HasSuffix(p.ConfigFile, ".js") {
@@ -43,18 +43,18 @@ func (p *Project) GetConfig() Config {
 		return ParseYAMLConfig(dat)
 	}
 
-	return Config{}
+	return Config{}, errors.New("could not parse config file because format is unsupported")
 }
 
-func ParseYAMLConfig(configData []byte) Config {
+func ParseYAMLConfig(configData []byte) (Config, error) {
 	parsedConfig := Config{}
 
 	parseErr := yaml.Unmarshal(configData, &parsedConfig)
 	if parseErr != nil {
-		panic(parseErr)
+		return Config{}, parseErr
 	}
 
-	return parsedConfig
+	return parsedConfig, nil
 }
 
 // Parse dynamic configs (JS and TS)
@@ -62,24 +62,24 @@ func ParseYAMLConfig(configData []byte) Config {
 /*
 ParseJSConfig parses a given JS string
 */
-func ParseJSConfig(configString string, filePath string) Config {
+func ParseJSConfig(configString string, filePath string) (Config, error) {
 	bundledConfig, bundleErr := bundleJSConfigFile(filePath)
 	if bundleErr != nil {
-		panic(bundleErr)
+		return Config{}, errors.New("could not bundle js/ts config file: " + bundleErr.Error())
 	}
 
 	config, executeErr := executeJSConfigFile(bundledConfig)
 	if executeErr != nil {
-		panic(executeErr)
+		return Config{}, errors.New("could not execute js/ts config file: " + executeErr.Error())
 	}
 
-	return config
+	return config, nil
 }
 
 /*
 ParseTSConfig parses a given TS string
 */
-func ParseTSConfig(configString string, filePath string) Config {
+func ParseTSConfig(configString string, filePath string) (Config, error) {
 	// because types are ignored, TS files can be handled by the JS parser
 	return ParseJSConfig(configString, filePath)
 }

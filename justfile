@@ -42,3 +42,9 @@ format:
 
 docs-dev:
     pnpm -C docs docs:dev
+
+docs-build:
+    pnpm -C docs docs:build
+
+docs-deploy: docs-build
+    pnpx wrangler pages deploy --project-name fql docs/.vitepress/dist

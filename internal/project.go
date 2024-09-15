@@ -20,15 +20,32 @@ type Project struct {
 	config     Config
 }
 
-func FindProjects(rootDir string, walkDir func(string, fs.WalkDirFunc) error) ([]Project, error) {
-	// check if path exists
-	if _, err := os.Stat(rootDir); err != nil {
-		return nil, err
+type ProjectLoadError struct {
+	Error    error
+	FilePath string
+}
+
+type FindProjectsResult struct {
+	Projects          []Project
+	ProjectLoadErrors []ProjectLoadError
+}
+
+func (f *FindProjectsResult) TotalProjectsFound() int {
+	return len(f.Projects) + len(f.ProjectLoadErrors)
+}
+
+func FindProjects(rootDir string, walkDir func(string, fs.WalkDirFunc) error) (FindProjectsResult, error) {
+	result := FindProjectsResult{
+		ProjectLoadErrors: make([]ProjectLoadError, 0),
+		Projects:          make([]Project, 0),
 	}
 
-	var projects []Project
+	// check if path exists
+	if _, err := os.Stat(rootDir); err != nil {
+		return result, err
+	}
 
-	err := walkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+	folderSearchErr := walkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() && d.Name() == "node_modules" {
 			return fs.SkipDir
 		}
@@ -41,26 +58,32 @@ func FindProjects(rootDir string, walkDir func(string, fs.WalkDirFunc) error) ([
 			}
 
 			// prime project
-			config := project.GetConfig()
-			project.Schemas = config.Schemas
-
-			projects = append(projects, project)
+			config, configLoadError := project.GetConfig()
+			if configLoadError != nil {
+				result.ProjectLoadErrors = append(result.ProjectLoadErrors, ProjectLoadError{
+					Error:    configLoadError,
+					FilePath: absolutePath,
+				})
+			} else {
+				project.Schemas = config.Schemas
+				result.Projects = append(result.Projects, project)
+			}
 		}
 
 		return nil
 	})
-	if err != nil {
-		return nil, err
+	if folderSearchErr != nil {
+		return result, folderSearchErr
 	}
 
-	return projects, nil
+	return result, nil
 }
 
 /*
 SchemaKey generates a string get is unique to a combination of schema documents
 */
 func (p *Project) SchemaKey() string {
-	projectConfig := p.GetConfig()
+	projectConfig, _ := p.GetConfig()
 
 	sortedSchemas := slices.Clone(projectConfig.Schemas)
 	slices.Sort(sortedSchemas)
@@ -140,7 +163,7 @@ func (e *ExecutionContext) Execute() {
 		schema := e.GetSchema(project.SchemaKey())
 
 		// execute all generation tasks
-		config := project.GetConfig()
+		config, _ := project.GetConfig()
 		for destination, destinationConfig := range config.Generates {
 			wg.Add(1)
 
@@ -188,11 +211,16 @@ func (e *ExecutionContext) ExecuteDestinationTasks(
 	output *strings.Builder,
 	schema *ast.Schema,
 	project Project,
-) {
+) error {
+	projectConfig, err := project.GetConfig()
+	if err != nil {
+		return err
+	}
+
 	task := plugins.PluginTask{
 		Schema: schema,
 		Output: output,
-		Config: project.GetConfig(),
+		Config: projectConfig,
 	}
 
 	// execute plugins
@@ -211,6 +239,8 @@ func (e *ExecutionContext) ExecuteDestinationTasks(
 			task.Introspect()
 		}
 	}
+
+	return nil
 }
 
 func EnsureDir(filePath string) error {

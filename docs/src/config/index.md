@@ -89,7 +89,7 @@ export default config
 ```
 
 #### `plugins`
-A `generates` config must contain a list of plugins. For available plugins please see the [plugin page](/plugins).
+A `generates` config must contain a list of plugins. For available plugins please see the [plugin page](../plugins/index).
 
 ## Other formats
 `faster-graphql-codegen` can also read this configuration from a `.yaml` or `.json` file.
