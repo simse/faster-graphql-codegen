@@ -1,7 +1,8 @@
 import type { CodegenConfig } from '@graphql-codegen/cli'
+import path from 'node:path';
 
 const createConfig = (): CodegenConfig => ({
-schema: ['../../apps/graphql-server/schema.graphql'],
+schema: ['../../apps/graphql-server' + path.delimiter() + 'schema.graphql'],
 documents: null,
 generates: {
   '__generated__/baseTypes.ts': {

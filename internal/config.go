@@ -4,11 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dop251/goja"
-	"github.com/evanw/esbuild/pkg/api"
+    "github.com/dop251/goja_nodejs/require"
+    "github.com/evanw/esbuild/pkg/api"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path"
-	"reflect"
+    "reflect"
 	"strings"
 )
 
@@ -95,6 +96,7 @@ func bundleJSConfigFile(filePath string) (string, error) {
 		LogLevel:    api.LogLevelInfo,
 		Format:      api.FormatCommonJS,
 		Target:      api.ES2015,
+		Platform:    api.PlatformNode,
 	})
 
 	if len(result.Errors) > 0 {
@@ -105,7 +107,28 @@ func bundleJSConfigFile(filePath string) (string, error) {
 }
 
 func executeJSConfigFile(input string) (Config, error) {
+	require.RegisterNativeModule("node:path", func(runtime *goja.Runtime, module *goja.Object) {
+        exports := module.Get("exports").(*goja.Object)
+        exports.Set("join", func(call goja.FunctionCall) goja.Value {
+            // Implement 'join' function
+            parts := make([]string, len(call.Arguments))
+            for i, arg := range call.Arguments {
+                parts[i] = arg.String()
+            }
+            result := strings.Join(parts, "/")
+            return runtime.ToValue(result)
+        })
+        // Add other 'path' methods as needed
+		exports.Set("delimiter", func(call goja.FunctionCall) goja.Value {
+			return runtime.ToValue("/")
+	    })
+    })
+
 	vm := goja.New()
+
+	// Initialize the require module from goja-nodejs
+    registry := new(require.Registry)
+    registry.Enable(vm)
 
 	// Initialize module.exports
 	module := vm.NewObject()
